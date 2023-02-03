@@ -25,6 +25,8 @@ program msx12btn;
 //    モードやキー設定をIniファイルで設定可能に。
 //    キャプション確認モード追加(iniのchkWindowMode=1)
 //
+// Ver.2.2.00
+//    パスワード入力時のバルーン削除。
 
 
 
@@ -46,7 +48,7 @@ uses
 
 {$R *.res}
 
-const VER = '2.1.00';
+const VER = '2.2.00';
 
 var
     Msg         : TMsg;
@@ -163,7 +165,7 @@ var
     Len  :integer;
     Name :string;
     CName :string;
-    tmpPos:TPoint;
+//    tmpPos:TPoint;
     i:integer;
     newIdx: integer;
 begin
@@ -442,15 +444,15 @@ begin
     Result := 0;
 
     case Msg of
-    WM_HOTKEY:
+{    WM_HOTKEY:
         begin
           if HIWORD(LPARAM)=Ord('Q') then
             PostQuitMessage(0);
           //else
             //ChangeToolTip;
         end;
-
-    WM_APP + 110:
+}
+    WM_APP + 110,WM_HOTKEY:
        begin
         //トレイアイコンで，マウス右ボタンが押されました.
           if (LParam = WM_LBUTTONDBLCLK)or(LParam = WM_RBUTTONDOWN)or(Msg = WM_HOTKEY) then begin
@@ -541,7 +543,7 @@ begin
                 isX1down := false;
 
                 KeyInput(X1[actIdx], false, MY_UP); 
-                beep;
+                //beep;
 
                 //XBUTTON 1のダブルクリック (15px以内でクリックした場合のみ）
                 if (timer=MY_XBUTTON1)and(max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15)and(X1d[actIdx]<>'') then begin
@@ -609,20 +611,22 @@ begin
 
                     if (max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15) then begin
 
-                      if (passwd_mode>0) and (pass[actIdx]<>'') then begin
+                      //if (passwd_mode>0) and (pass[actIdx]<>'') then begin
+                      if isX1down and (pass[actIdx]<>'') then begin
 
                         //pass_modeから５秒以内
-                        if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
-                          Balloon('');
+                       // if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
+                          //Balloon('');
                           keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
                           keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+                          sleep(100);
                           KeyInput(pass[actIdx], true, MY_CLICK);
-                        end else
-                          Balloon('');
+                       // end else
+                       //   Balloon('');
 
                         passwd_mode:=0;
 
-                      end else if isX1down and (pass[actIdx]<>'') then begin
+                      end else if false and isX1down and (pass[actIdx]<>'') then begin
                       //pass mode
                         Balloon(winType[actIdx]+#13'Input Password?');
                         passwd_mode:=Now();
@@ -691,9 +695,10 @@ begin
 
     //Form1を作成
     Application.Initialize;
+    Application.MainFormOnTaskbar := False;
     //TStyleManager.TrySetStyle('Light');
     Application.CreateForm(TForm1, Form1);
-
+    SetWindowLong(Application.Handle, GWL_EXSTYLE, WS_EX_TOOLWINDOW);
 
     //トレイアイコン登録
     TrayIconTouroku;
