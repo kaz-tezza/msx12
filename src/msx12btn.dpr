@@ -456,14 +456,19 @@ begin
        begin
         //トレイアイコンで，マウス右ボタンが押されました.
           if (LParam = WM_LBUTTONDBLCLK)or(LParam = WM_RBUTTONDOWN)or(Msg = WM_HOTKEY) then begin
-            ret:=MessageDlg('木本専用'#10'マウスX1X2ボタン置換ツール'#10'Ver.'+VER+#10'を終了します。',
+            ret:=MessageDlg('木本専用'#10'マウスX1X2ボタン置換ツール'#10'Ver.'+VER+#10'を終了しますか。',
                        mtInformation,
-                       mbOKCancel,
+                       [mbYes,mbNo,mbRetry],
                        0);
             //ダイアログを[X]ボタンで閉じてしまった場合の対策
             //[X]ボタンと[Alt]+[F4]では常駐を終了させない
             Result := 1;
-            if ret=mrOK then PostQuitMessage(0);
+            if ret=mrYes then PostQuitMessage(0);
+            if ret=mrRetry then begin
+              ShellExecute(0, 'open', PChar(ExtractFileDir(ParamStr(0))), PChar(''), nil, SW_SHOW);
+              ShellExecute(0, 'open', PChar(ParamStr(0)), PChar(''), nil, SW_SHOW);
+              PostQuitMessage(0);
+            end;
           end;
 
           //if (LParam = WM_LBUTTONDBLCLK) then ChangeToolTip;
@@ -542,7 +547,7 @@ begin
 
                 isX1down := false;
 
-                KeyInput(X1[actIdx], false, MY_UP); 
+                KeyInput(X1[actIdx], false, MY_UP);
                 //beep;
 
                 //XBUTTON 1のダブルクリック (15px以内でクリックした場合のみ）
@@ -571,7 +576,7 @@ begin
                   KillTimer(Application.Handle, MY_XBUTTON2);
                   timer:=0;
                   //X1のキー入力をキャンセル
-                  KeyInput(X1[actIdx], false, MY_UP); 
+                  KeyInput(X1[actIdx], false, MY_UP);
                   SystemParametersInfo(SPI_SETCURSORS, 0, nil, 0);
 
                   case Form1.Tag of
@@ -619,7 +624,7 @@ begin
                           //Balloon('');
                           keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
                           keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-                          sleep(100);
+                          sleep(500);
                           KeyInput(pass[actIdx], true, MY_CLICK);
                        // end else
                        //   Balloon('');
