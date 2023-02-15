@@ -551,9 +551,17 @@ begin
 
                 KeyInput(X1[actIdx], false, MY_UP);
                 //beep;
+                if passwd_mode>0 then begin
+                  keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+                  keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+                  sleep(300);
+                  //パスワード入力
+                  KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
+                  passwd_mode:=0;
+                end
 
                 //XBUTTON 1のダブルクリック (15px以内でクリックした場合のみ）
-                if (timer=MY_XBUTTON1)and(max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15)and(X1d[actIdx]<>'') then begin
+                else if (timer=MY_XBUTTON1)and(max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15)and(X1d[actIdx]<>'') then begin
                   KillTimer(Application.Handle, MY_XBUTTON1);
                   timer:=0;
                   KeyInput(X1d[actIdx], false, MY_CLICK, wait[actIdx]);
@@ -620,19 +628,20 @@ begin
 
                       //if (passwd_mode>0) and (pass[actIdx]<>'') then begin
                       if isX1down and (pass[actIdx]<>'') then begin
+                        passwd_mode:=1;
 
                         //pass_modeから５秒以内
                        // if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
                           //Balloon('');
-                          keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-                          keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-                          sleep(500);
+                          //keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+                          //keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+                          //sleep(500);
                           //パスワード入力
-                          KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
+                          //KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
                        // end else
                        //   Balloon('');
 
-                        passwd_mode:=0;
+                        //passwd_mode:=0;
 
                       //end else if false and isX1down and (pass[actIdx]<>'') then begin
                       //pass mode
