@@ -74,10 +74,11 @@ var
     VP  : array[0..9] of string;
     DEF : array[0..9] of string;
     pass: array[0..9] of string;
+    wait: array[0..9] of integer;
 
     isX1down: boolean;
     isX2down: boolean;
-    
+
 
     curPos :TPoint;
     passwd_mode    : TDateTime;
@@ -101,7 +102,7 @@ const
     MY_CLICK = 0;
     MY_DOWN = 1;
     MY_UP =2;
-    
+
 function StartMouseKeyHook(Wnd: HWND): HHOOK; stdcall; external 'ms45hook.DLL';
 procedure StopMouseKeyHook; stdcall; external 'ms45hook.DLL';
 
@@ -199,42 +200,42 @@ end;
 //-----------------------------------------------------------------------------
 //  トレイアイコンとホットキーの登録
 //-----------------------------------------------------------------------------
-function conv(s:string): string;
-begin
-    //特殊キー
-    s := StringReplace(s, 'Ctrl+',  #17, [rfReplaceAll, rfIgnoreCase]);//VK_CONTROL
-    s := StringReplace(s, 'Shift+', #16, [rfReplaceAll, rfIgnoreCase]);//VK_SHIFT
-    s := StringReplace(s, 'Alt+',   #18, [rfReplaceAll, rfIgnoreCase]);//VK_MENU
-    s := StringReplace(s, 'Win+', #8091, [rfReplaceAll, rfIgnoreCase]);//VK_LWIN
-    s := StringReplace(s, 'Ctrl',   #17, [rfReplaceAll, rfIgnoreCase]);//VK_CONTROL
-    s := StringReplace(s, 'Shift',  #16, [rfReplaceAll, rfIgnoreCase]);//VK_SHIFT
-    s := StringReplace(s, 'Alt',    #18, [rfReplaceAll, rfIgnoreCase]);//VK_MENU
-    s := StringReplace(s, 'Win',  #8091, [rfReplaceAll, rfIgnoreCase]);//VK_LWIN
-    s := StringReplace(s, '<0>',  #8096, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD0
-    s := StringReplace(s, '<1>',  #8097, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD1
-    s := StringReplace(s, '<2>',  #8098, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD2
-    s := StringReplace(s, '<3>',  #8099, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD3
-    s := StringReplace(s, '<4>',  #8100, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD4
-    s := StringReplace(s, '<5>',  #8101, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD5
-    s := StringReplace(s, '<6>',  #8102, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD6
-    s := StringReplace(s, '<7>',  #8103, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD7
-    s := StringReplace(s, '<8>',  #8104, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD8
-    s := StringReplace(s, '<9>',  #8105, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD9
-    s := StringReplace(s, '<.>',  #8110, [rfReplaceAll, rfIgnoreCase]);//VK_DECIMAL
-    s := StringReplace(s, '<Enter>',#13, [rfReplaceAll, rfIgnoreCase]);//VK_RETURN
-    s := StringReplace(s, '<Esc>',  #27, [rfReplaceAll, rfIgnoreCase]);//VK_ESCAPE
-    //Mouseボタン
-    s := StringReplace(s, '<Left>',  #1, [rfReplaceAll, rfIgnoreCase]);//VK_LBUTTON
-    s := StringReplace(s, '<Right>', #2, [rfReplaceAll, rfIgnoreCase]);//VK_RBUTTON
-    s := StringReplace(s, '<Middle>',#4, [rfReplaceAll, rfIgnoreCase]);//VK_MBUTTON
-
-    Result:=s;
-end;
 
 procedure TrayIconTouroku;
 var
     IniFile :TIniFile;
     i:integer;
+  function conv(s:string): string; //特殊文字をキーコードに変換して返す
+  begin
+     //特殊キー
+      s := StringReplace(s, 'Ctrl+',  #17, [rfReplaceAll, rfIgnoreCase]);//VK_CONTROL
+      s := StringReplace(s, 'Shift+', #16, [rfReplaceAll, rfIgnoreCase]);//VK_SHIFT
+      s := StringReplace(s, 'Alt+',   #18, [rfReplaceAll, rfIgnoreCase]);//VK_MENU
+      s := StringReplace(s, 'Win+', #8091, [rfReplaceAll, rfIgnoreCase]);//VK_LWIN
+      s := StringReplace(s, 'Ctrl',   #17, [rfReplaceAll, rfIgnoreCase]);//VK_CONTROL
+      s := StringReplace(s, 'Shift',  #16, [rfReplaceAll, rfIgnoreCase]);//VK_SHIFT
+      s := StringReplace(s, 'Alt',    #18, [rfReplaceAll, rfIgnoreCase]);//VK_MENU
+      s := StringReplace(s, 'Win',  #8091, [rfReplaceAll, rfIgnoreCase]);//VK_LWIN
+      s := StringReplace(s, '<0>',  #8096, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD0
+      s := StringReplace(s, '<1>',  #8097, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD1
+      s := StringReplace(s, '<2>',  #8098, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD2
+      s := StringReplace(s, '<3>',  #8099, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD3
+      s := StringReplace(s, '<4>',  #8100, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD4
+      s := StringReplace(s, '<5>',  #8101, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD5
+      s := StringReplace(s, '<6>',  #8102, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD6
+      s := StringReplace(s, '<7>',  #8103, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD7
+      s := StringReplace(s, '<8>',  #8104, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD8
+      s := StringReplace(s, '<9>',  #8105, [rfReplaceAll, rfIgnoreCase]);//VK_NUMPAD9
+      s := StringReplace(s, '<.>',  #8110, [rfReplaceAll, rfIgnoreCase]);//VK_DECIMAL
+      s := StringReplace(s, '<Enter>',#13, [rfReplaceAll, rfIgnoreCase]);//VK_RETURN
+      s := StringReplace(s, '<Esc>',  #27, [rfReplaceAll, rfIgnoreCase]);//VK_ESCAPE
+      //Mouseボタン
+      s := StringReplace(s, '<Left>',  #1, [rfReplaceAll, rfIgnoreCase]);//VK_LBUTTON
+      s := StringReplace(s, '<Right>', #2, [rfReplaceAll, rfIgnoreCase]);//VK_RBUTTON
+      s := StringReplace(s, '<Middle>',#4, [rfReplaceAll, rfIgnoreCase]);//VK_MBUTTON
+
+      Result:=s;
+  end;
 begin
     //INIファイルロード
     IniFile := TIniFile.Create(ChangeFileExt(ParamStr(0),'.ini'));
@@ -260,6 +261,7 @@ begin
         VP[i]        := conv(IniFile.ReadString('Type'+IntToStr(i), 'VP', ''));
         DEF[i]       := conv(IniFile.ReadString('Type'+IntToStr(i), 'DEF', ''));
         pass[i]      := conv(IniFile.ReadString('Type'+IntToStr(i), 'id_pass', ''));
+        wait[i]      := IniFile.ReadInteger('Type'+IntToStr(i), 'delay', 0);
 
         szTip[i]  := 'X1:'+IniFile.ReadString('Type'+IntToStr(i), 'X1', 'Shift')+#10+
                      'X2:'+IniFile.ReadString('Type'+IntToStr(i), 'X2', 'Ctrl')+#10+
@@ -307,10 +309,10 @@ end;
 //  [Ctrl]+[A]キーで常駐終了
 //  タスクトレイの本アプリのアイコン上のマウス右ボタン押下でメッセージを表示
 // ss:keys
-// caseSensitive:
+// caseSensitive: true,false
 // state: 0:click, 1:down, 2:up
 //-----------------------------------------------------------------------------
-procedure KeyInput(ss:string; caseSensitive:boolean; state:integer);
+procedure KeyInput(ss:string; caseSensitive:boolean; state:integer; delay:integer=0);
 var
     I, J: integer;
     needShift: boolean; //自動で設定する
@@ -389,13 +391,13 @@ begin
         if state=0 then begin //click
           if btn=1 then mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);
           if btn=1 then mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
-          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);    
-          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTUP,0,0,0,0);    
-          if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);    
-          if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);    
+          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);
+          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTUP,0,0,0,0);
+          if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);
+          if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);
         end else if state=1 then begin //down
-          if btn=1 then mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);    
-          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);    
+          if btn=1 then mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);
+          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);
           if btn=4 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);
         end else if state=2 then begin //up
           if btn=1 then mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
@@ -425,7 +427,7 @@ begin
         end;
       end;
       SetLength(CtrlKeys, 0);
-
+      if delay>0 then sleep(delay);
     end;
 
 end;
@@ -501,7 +503,7 @@ begin
                   balloon('');
                 end;
 
-                KeyInput(X1[actIdx], false, MY_DOWN); 
+                KeyInput(X1[actIdx], false, MY_DOWN);
 
             end else
 
@@ -521,10 +523,10 @@ begin
                     PostQuitMessage(0);
                   end;
                   //X1をキャンセル
-                  KeyInput(X1[actIdx], false, MY_UP); 
+                  KeyInput(X1[actIdx], false, MY_UP);
 
                 end else begin
-                  KeyInput(X2[actIdx], false, MY_DOWN); 
+                  KeyInput(X2[actIdx], false, MY_DOWN);
                 end;
             end;
           end;
@@ -554,7 +556,7 @@ begin
                 if (timer=MY_XBUTTON1)and(max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15)and(X1d[actIdx]<>'') then begin
                   KillTimer(Application.Handle, MY_XBUTTON1);
                   timer:=0;
-                  KeyInput(X1d[actIdx], false, MY_CLICK);
+                  KeyInput(X1d[actIdx], false, MY_CLICK, wait[actIdx]);
                 end
 
                 //XBUTTON 1のシングルクリック(ダブルクリックタイマー起動)
@@ -596,7 +598,7 @@ begin
 
                   if mapkey<>''  then begin
                     //Balloon(mapkey);
-                    KeyInput(mapkey, false, MY_CLICK);
+                    KeyInput(mapkey, false, MY_CLICK, wait[actIdx]);
                   end;
 
                 end
@@ -625,16 +627,17 @@ begin
                           keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
                           keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
                           sleep(500);
-                          KeyInput(pass[actIdx], true, MY_CLICK);
+                          //パスワード入力
+                          KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
                        // end else
                        //   Balloon('');
 
                         passwd_mode:=0;
 
-                      end else if false and isX1down and (pass[actIdx]<>'') then begin
+                      //end else if false and isX1down and (pass[actIdx]<>'') then begin
                       //pass mode
-                        Balloon(winType[actIdx]+#13'Input Password?');
-                        passwd_mode:=Now();
+                      //  Balloon(winType[actIdx]+#13'Input Password?');
+                      //  passwd_mode:=Now();
                       end else begin
                       //通常のdblclk
                         KeyInput(X2[actIdx], false, MY_UP);
