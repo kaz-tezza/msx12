@@ -484,18 +484,19 @@ begin
 
           //---------------------------------------------------------
           //---------------------------------------------------------
-          //---------------------------------------------------------
           //マウスボタンDOWN-----------------------------------------
-          //---------------------------------------------------------
           //---------------------------------------------------------
           //---------------------------------------------------------
           WM_XBUTTONDOWN, WM_NCXBUTTONDOWN:begin
 
               GetCursorPos(curPos);
 
+            //----------------------------------------------------------------
+            //  XBUTTON1 DOWN
+            //----------------------------------------------------------------
             if LParam=MY_XBUTTON1 then begin
             //XBUTTON1はマウス手前側のボタン
-          
+
                 isX1down := True;
 
                 if passwd_mode>0 then begin
@@ -507,12 +508,14 @@ begin
 
             end else
 
-
+            //----------------------------------------------------------------
+            //  XBUTTON2 DOWN
+            //----------------------------------------------------------------
             if LParam=MY_XBUTTON2 then begin
             //XBUTTON2はマウス奥側のボタン
-          
+
                 isX2down := True;
-              
+
                 //XBUTTON1押しながらのとき, 3Dモデル方向変更モード
                 if isX1down and(DEF[actIdx]<>'') then begin
                   try
@@ -536,15 +539,15 @@ begin
 
           //---------------------------------------------------------
           //---------------------------------------------------------
-          //---------------------------------------------------------
           //マウスボタンUP-------------------------------------------
-          //---------------------------------------------------------
           //---------------------------------------------------------
           //---------------------------------------------------------
           WM_XBUTTONUP, WM_NCXBUTTONUP: begin
               GetCursorPos(tmpPos);
 
-              //XButton1
+              //----------------------------------------------------------------
+              //XButton1 UP
+              //----------------------------------------------------------------
               if LParam=MY_XBUTTON1 then begin
 
                 isX1down := false;
@@ -552,11 +555,14 @@ begin
                 KeyInput(X1[actIdx], false, MY_UP);
                 //beep;
                 if passwd_mode>0 then begin
-                  keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-                  keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-                  sleep(300);
-                  //パスワード入力
-                  KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
+                  //pass_modeから５秒以内
+                  if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
+                    keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+                    keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+                    sleep(300);
+                    //パスワード入力
+                    KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
+                  end;
                   passwd_mode:=0;
                 end
 
@@ -576,11 +582,14 @@ begin
 
               end
 
-              //XBUTTON 2
+              //----------------------------------------------------------------
+              //XBUTTON 2 UP
+              //----------------------------------------------------------------
               else if LParam=MY_XBUTTON2 then begin
 
                 isX2down := false;
 
+                //Form表示のとき
                 if Form1.Visible then begin
                   Form1.Hide;
                   KillTimer(Application.Handle, MY_XBUTTON2);
@@ -628,7 +637,7 @@ begin
 
                       //if (passwd_mode>0) and (pass[actIdx]<>'') then begin
                       if isX1down and (pass[actIdx]<>'') then begin
-                        passwd_mode:=1;
+                        passwd_mode:=Now();
 
                         //pass_modeから５秒以内
                        // if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
