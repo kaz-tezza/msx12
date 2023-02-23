@@ -1,54 +1,46 @@
 program msx12btn;
-
-// Ver.1.1
-//   Creoモード・SolidWorksモードの切替
-//
-// Ver.1.2
-//   SolidWorksウインドウを自動認識しモードを切り替える
-//
-// Ver.1.3.00
-//   Shift+X2でのモデル方向mapkey動作変更。
-//   mapkey 関連をcreoやworksウインドウ以外で効かないように。
-//   モード切替HotKey廃止。
-//
-// Ver.1.3.01
-//   パスワード入力機能追加。左シフト＋X2Dbl
-// Ver.1.3.02
-//   CurrWinが変わるとバルーン再表示される不具合修正。
-// Ver.1.3.03
-//   文字入力機能でIME OFF機能を追加。
-//
-// Ver.2.0.00
-//    Form付 VF,VR,VBTなどのマップキー用
-//
-// Ver.2.1.00
-//    モードやキー設定をIniファイルで設定可能に。
-//    キャプション確認モード追加(iniのchkWindowMode=1)
-//
-// Ver.2.2.00
-//    パスワード入力時のバルーン削除。
-
-
-
 uses
-    Windows,
-    Classes,
-    Messages,
-    SysUtils,
-    Forms,
-    ShellAPI,
-    System.UITypes,
-    Dialogs,
-    Math,
-    IniFiles,
-    IMM,
-    Unit1 in 'Unit1.pas' {Form1},
-    Vcl.Themes,
-    Vcl.Styles;
+    Windows, Classes, Messages, SysUtils, Forms, ShellAPI, System.UITypes,
+    Dialogs, Math, IniFiles, IMM, Vcl.Themes, Vcl.Styles,
+    Unit1 in 'Unit1.pas' {Form1};
+
+
+{ HISTORY :
+ Ver.1.1
+   Creoモード・SolidWorksモードの切替
+
+ Ver.1.2
+   SolidWorksウインドウを自動認識しモードを切り替える
+
+ Ver.1.3.00
+   Shift+X2でのモデル方向mapkey動作変更。
+   mapkey 関連をcreoやworksウインドウ以外で効かないように。
+   モード切替HotKey廃止。
+
+ Ver.1.3.01
+   パスワード入力機能追加。左シフト＋X2Dbl
+ Ver.1.3.02
+   CurrWinが変わるとバルーン再表示される不具合修正。
+ Ver.1.3.03
+   文字入力機能でIME OFF機能を追加。
+
+ Ver.2.0.00
+    Form付 VF,VR,VBTなどのマップキー用
+
+ Ver.2.1.00
+    モードやキー設定をIniファイルで設定可能に。
+    キャプション確認モード追加(iniのchkWindowMode=1)
+
+ Ver.2.2.00
+    パスワードモード時のバルーン削除。
+    パスワードモードに入る操作をX1＋X2dblを２回→１回に変更。
+    パスワードの入力ディレイ設定追加。iniでderay=[msec]
+    修了確認ダイアログの再試行で、アプリ保存先を開く機能追加。
+
+}
+const VER = '2.2.00';
 
 {$R *.res}
-
-const VER = '2.2.00';
 
 var
     Msg         : TMsg;
@@ -594,8 +586,8 @@ begin
                   Form1.Hide;
                   KillTimer(Application.Handle, MY_XBUTTON2);
                   timer:=0;
-                  //X1のキー入力をキャンセル
-                  KeyInput(X1[actIdx], false, MY_UP);
+
+                  KeyInput(X1[actIdx], false, MY_UP); //X1のキー入力をキャンセル
                   SystemParametersInfo(SPI_SETCURSORS, 0, nil, 0);
 
                   case Form1.Tag of
@@ -635,27 +627,10 @@ begin
 
                     if (max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15) then begin
 
-                      //if (passwd_mode>0) and (pass[actIdx]<>'') then begin
+                      //パスワードモード開始
                       if isX1down and (pass[actIdx]<>'') then begin
                         passwd_mode:=Now();
 
-                        //pass_modeから５秒以内
-                       // if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
-                          //Balloon('');
-                          //keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
-                          //keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
-                          //sleep(500);
-                          //パスワード入力
-                          //KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
-                       // end else
-                       //   Balloon('');
-
-                        //passwd_mode:=0;
-
-                      //end else if false and isX1down and (pass[actIdx]<>'') then begin
-                      //pass mode
-                      //  Balloon(winType[actIdx]+#13'Input Password?');
-                      //  passwd_mode:=Now();
                       end else begin
                       //通常のdblclk
                         KeyInput(X2[actIdx], false, MY_UP);
