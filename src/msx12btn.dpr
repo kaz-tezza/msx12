@@ -547,8 +547,8 @@ begin
                 KeyInput(X1[actIdx], false, MY_UP);
                 //beep;
                 if passwd_mode>0 then begin
-                  //pass_mode‚©‚ç‚T•bˆÈ“à
-                  if (Now()-passwd_mode < StrToDateTime('0:0:5')) then begin
+                  //pass_mode‚©‚ç3•bˆÈ“à
+                  if (Now()-passwd_mode < StrToDateTime('0:0:3')) then begin
                     keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
                     keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
                     sleep(300);
