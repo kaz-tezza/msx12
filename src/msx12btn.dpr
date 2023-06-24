@@ -36,9 +36,11 @@ uses
     パスワードモードに入る操作をX1＋X2dblを２回→１回に変更。
     パスワードの入力ディレイ設定追加。iniでderay=[msec]
     修了確認ダイアログの再試行で、アプリ保存先を開く機能追加。
+ Ver.2.2.01
+    パスワードの入力ディレイで、KEYDOWN、KEYUPそれぞれ半分ずつディレイするように変更
 
 }
-const VER = '2.2.00';
+const VER = '2.2.01';
 
 {$R *.res}
 
@@ -79,6 +81,8 @@ var
 
     chkWindowMode:boolean;
 
+    foregroundHandle: HWND;
+
 const
     WM_XBUTTONDOWN   = $020B;
     WM_XBUTTONUP     = $020C;
@@ -94,6 +98,9 @@ const
     MY_CLICK = 0;
     MY_DOWN = 1;
     MY_UP =2;
+
+    WM_GETDLGCODE = $0087; //キー入力を受け付けるかチェックで使う
+
 
 function StartMouseKeyHook(Wnd: HWND): HHOOK; stdcall; external 'ms45hook.DLL';
 procedure StopMouseKeyHook; stdcall; external 'ms45hook.DLL';
@@ -124,7 +131,7 @@ begin
       IMC := ImmGetDefaultIMEWnd(Hdl);
       SendMessage(IMC, WM_IME_CONTROL, 6{IMC_SETOPENSTATUS}, Ord(OnOff));
 
-      //状態を取得する場合は以下で。
+      //（参考）状態を取得する場合は以下で。
       //if LongBool(SendMessage(IMC, WM_IME_CONTROL,
       //                        5{IMC_GETOPENSTATUS}, 0)) then begin
       //  result := True
@@ -382,10 +389,11 @@ begin
       //mouse button
         if state=0 then begin //click
           if btn=1 then mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);
-          if btn=1 then mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
           if btn=2 then mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);
-          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTUP,0,0,0,0);
           if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);
+          if delay>0 then sleep(delay div 2 + 1);
+          if btn=1 then mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
+          if btn=2 then mouse_event(MOUSEEVENTF_RIGHTUP,0,0,0,0);
           if btn=3 then mouse_event(MOUSEEVENTF_MIDDLEDOWN,0,0,0,0);
         end else if state=1 then begin //down
           if btn=1 then mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);
@@ -401,6 +409,7 @@ begin
         if state=0 then begin //click
           if needShift then keybd_event(VK_SHIFT, 0, 0, 0);
           keybd_event(key, 0, 0, 0);
+          if delay>0 then sleep(delay div 2 + 1);
           keybd_event(key, 0, KEYEVENTF_KEYUP, 0);
           if needShift then keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
         end else if state=1 then begin //down
@@ -419,10 +428,12 @@ begin
         end;
       end;
       SetLength(CtrlKeys, 0);
-      if delay>0 then sleep(delay);
+      if delay>0 then sleep(delay div 2 + 1);
     end;
 
 end;
+
+
 
 //-----------------------------------------------------------------------------
 //  メッセージ処理用ウィンドウプロシージャー
@@ -552,7 +563,7 @@ begin
                     keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
                     keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
                     sleep(300);
-                    //パスワード入力
+                    //パスワード入力開始
                     KeyInput(pass[actIdx], true, MY_CLICK, wait[actIdx]);
                   end;
                   passwd_mode:=0;
@@ -627,7 +638,7 @@ begin
 
                     if (max(abs(curPos.X-tmpPos.X),abs(curPos.Y-tmpPos.Y))<15) then begin
 
-                      //パスワードモード開始
+                      //パスワード準備モード開始（X1ボタンを離すと入力開始）
                       if isX1down and (pass[actIdx]<>'') then begin
                         passwd_mode:=Now();
 
